@@ -1,5 +1,4 @@
 
-
 cat("\nInstall/load packages\n")
 inst.pkgs <- installed.packages()
 l.pkgs <- c("stringr",
@@ -10,7 +9,8 @@ l.pkgs <- c("stringr",
             "mvtnorm",
             "tmvtnorm",
             "parallel",
-            "nloptr")
+            "nloptr",
+            "spsUtil")
 lapply(l.pkgs, function(pkg){
   if(!(pkg %in% rownames(inst.pkgs))){
     install.packages(pkg)
@@ -153,6 +153,10 @@ generate.get.dxdP.wg(n = nStates*(nStates - 1)/2 + 2*nStates,
 
 generate.get.Sigma(ct.lst = chs,
                    rct.lst = rcs)
+
+generate.get.xP.steady(ct.lst = chs)
+generate.get.xP.steady_djs(p = ntheta, 
+                           jsens = JSENS)
 
 ## ODE functions
 cat(paste0("\t generating ODE functions...\n"))
@@ -300,7 +304,7 @@ gs_lb <- exp(mm_fit(res.mmfit$par, 4) - qnorm(1 - 0.01/2)*mm_sd)
 gs_ub <- exp(mm_fit(res.mmfit$par, 4) + qnorm(1 - 0.01/2)*mm_sd)
 
 if(nCell == 1){
-  pdf(paste0(allFigsPath, "fig8c.pdf"), width = 6, height = 5)
+  pdf(paste0(allFigsPath, "fig11c.pdf"), width = 6, height = 5)
   par(mar = c(6,6.4,1,1.2))
   plot(cbind(c(50,100,300),
              c(7, 10.1,13.7)),
@@ -349,7 +353,7 @@ if(nCell == 1){
   title(xlab= expression("["~K~"]"[O]), line=4.5, cex.lab=2)
   dev.off()
   
-  pdf(paste0(allFigsPath, "fig8c-zoom.pdf"), width = 4, height = 3.5)
+  pdf(paste0(allFigsPath, "fig11c-zoom.pdf"), width = 4, height = 3.5)
   par(mar = c(3,3.1,.5,.5))
   plot(c(0.0),
        xlim = c(3.5,4.5),
@@ -423,7 +427,7 @@ res.SDE_gsfixed <- try(optim(par = psi0, # psi0
                              hessian = FALSE),
                        silent = TRUE)
 
-save.image(paste0(resPath,"/data-fit.RData"))
+save.image(paste0(resPath,"/data-fit-nCell", nCell, ".RData"))
 
 mus <- get.pred(psi = res.SDE_gsfixed$par,
                 gamma = gamma.true,
@@ -436,7 +440,7 @@ mu_psd <- (mus[1:length(Vsin) %% 10 == 1, "mu"] + qnorm(1-0.05/2)*sqrt(mus[1:len
 mu_msd <- (mus[1:length(Vsin) %% 10 == 1, "mu"] - qnorm(1-0.05/2)*sqrt(mus[1:length(Vsin) %% 10 == 1, "s"]))
 
 
-pdf(paste0(allFigsPath, ifelse(nCell == 1, "fig8a", paste0("fig9-cell", nCell)), ".pdf"), width = 12, height = 4.5)
+pdf(paste0(allFigsPath, ifelse(nCell == 5, "fig11a", paste0("fig12-cell", nCell)), ".pdf"), width = 12, height = 4.5)
 par(mar = c(2,5,.5,.5), mfrow = c(1,1))
 ###
 plot(1, 

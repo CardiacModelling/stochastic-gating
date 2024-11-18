@@ -1,3 +1,4 @@
+
 generate.get.Jf_y <- function(ct.lst,
                            rct.lst,
                            p,
@@ -397,13 +398,13 @@ nl.try <- function(psi,
                    E,
                    y,
                    hmax){
-  nl.res <- try(get.nl(psi = psi,
-                   gamma = gamma,
-                   times = times,
-                   V = V,
-                   E = E,
-                   y = y,
-                   hmax = hmax), silent = TRUE)
+  nl.res <- try(quiet(get.nl(psi = psi,
+                             gamma = gamma,
+                             times = times,
+                             V = V,
+                             E = E,
+                             y = y,
+                             hmax = hmax)), silent = TRUE)
   if(inherits(nl.res,'try-error') |
      is.nan(nl.res) |
      is.infinite(nl.res)){
@@ -420,13 +421,13 @@ gnl.try <- function(psi,
                     E,
                     y,
                     hmax){
-  gnl.res <- try(get.gnl(psi = psi,
-                         gamma = gamma,
-                         times = times,
-                         V = V,
-                         E = E,
-                         y = y,
-                         hmax = hmax), silent = TRUE)
+  gnl.res <- try(quiet(get.gnl(psi = psi,
+                               gamma = gamma,
+                               times = times,
+                               V = V,
+                               E = E,
+                               y = y,
+                               hmax = hmax)), silent = TRUE)
   if(inherits(gnl.res,'try-error') |
      sum(is.nan(gnl.res)) > 0 |
      sum(is.infinite(gnl.res)) > 0){
@@ -434,6 +435,62 @@ gnl.try <- function(psi,
   }
   return(gnl.res)
 }
+
+generate.get.xP.steady <- function(ct.lst,
+                                  envir = .GlobalEnv){
+  
+  get.xP.steady.string <- paste0("get.xP.steady <- function(t = 0,
+                         parms){\n",
+                                "lambda <- get.lambda(theta = parms,\n V = get.voltage(t = t))\n",
+                                "xP.s <- (- solve(get.Jfy.y(lambda)) %*% get.bfy(lambda))[,1]\n",
+                                "names(xP.s)[1:", length(ct.lst) - 1,"] <- c(",
+                                paste(sapply(head(ct.lst,-1), function(s){paste0("'", s, "'")}), collapse = ",\n"), ")\n",
+                                "return(xP.s)\n}")
+  
+  eval(parse(text=get.xP.steady.string), envir = envir)
+  
+}
+
+generate.get.xP.steady.forgrad <- function(p,
+                                          envir = .GlobalEnv){
+  
+  get.xP.steady.forgrad.string <- paste0("get.xP.steady.forgrad <- function(",
+                                        paste(paste0("p", 1:p), collapse = ",\n"),
+                                        ",\nt){\n",
+                                        "parms <- c(",
+                                        paste(paste0("p", 1:p), collapse = ",\n"),
+                                        ")\n",
+                                        "lambda <- get.lambda(theta = parms,\n V = get.voltage(t = t))\n",
+                                        "Vl <- get.Vlambda(lambda)\n",
+                                        "(- solve(get.Jfy.y(lambda)) %*% get.bfy(lambda))[,1]\n}")
+  
+  eval(parse(text=get.xP.steady.forgrad.string), envir = envir)
+}
+
+generate.get.xP.steady_djs <- function(p,
+                                      jsens,
+                                      envir = .GlobalEnv){
+  
+  generate.get.xP.steady.forgrad(p = p,
+                                envir = environment())
+  
+  get.xP.steady_djs_c <- Deriv(f = get.xP.steady.forgrad,
+                              x = c(paste0("p", jsens)),
+                              combine = "c",
+                              cache.exp = TRUE)
+  
+  get.xP.steady_djs_c_deparsed <- deparse(get.xP.steady_djs_c)
+  get.xP.steady_djs_c_deparsed[1] <- paste0("get.xP.steady_djs_c <- ", get.xP.steady_djs_c_deparsed[1])
+  eval(parse(text=paste0(get.xP.steady_djs_c_deparsed, collapse = " \n")), envir = envir)
+  
+  eval(parse(text=paste0(paste0("get.xP.steady_djs <- function(t,
+                   parms){\nget.xP.steady_djs_c(",
+                                paste(paste0("p",1:p, "=parms[", 1:p,"]"), collapse = ',\n'),
+                                ",\n",
+                                "t = t)\n}"), collapse = " \n")),
+       envir = envir)
+}
+
 
 get.nl <- function(psi,
                    gamma,
@@ -450,9 +507,8 @@ get.nl <- function(psi,
   s2 <- phi[length(theta) + 2]
   nu <- 1 + phi[length(theta) + 3]
 
-  xP <- try(vode(y = c(get.x.steady(t = max(times),
-                                    parms = c(theta, gamma)),
-                       rep(0, 10)), # nStates*(nStates - 1)/2 + nStates = 10
+  xP <- try(vode(y = get.xP.steady(t = max(times),
+                                    parms = c(theta, gamma)), # nStates*(nStates - 1)/2 + nStates = 10
                  times = times,
                  func = get.dxdP,
                  jacfunc = get.Jf.xP,
@@ -485,12 +541,10 @@ get.gnl <- function(psi,
   s2 <- phi[length(theta) + 2]
   nu <- 1 + phi[length(theta) + 3]
 
-  xP.wg <- try(vode(y = c(get.x.steady(t = max(times),
-                                       parms = c(theta, gamma)),
-                          rep(0, 10), # nStates*(nStates - 1)/2 + nStates
-                          get.x.steady_djs(t = max(times),
-                                           parms = c(theta, gamma)),
-                          rep(0, 80)),
+  xP.wg <- try(vode(y = c(get.xP.steady(t = max(times),
+                                    parms = c(theta, gamma)),
+                          get.xP.steady_djs(t = max(times),
+                                           parms = c(theta, gamma))),
                     times = times,
                     func = get.dxdP.wg,
                     jacfunc = get.Jf.xP.wg,
@@ -533,6 +587,172 @@ get.gnl <- function(psi,
            gnl_nu))
 
 }
+# get.nl <- function(psi,
+#                    gamma,
+#                    times,
+#                    V,
+#                    E,
+#                    y,
+#                    hmax){
+# 
+#   phi <- exp(psi)
+# 
+#   theta <- head(phi, -3)
+#   gs <- phi[length(theta) + 1]
+#   s2 <- phi[length(theta) + 2]
+#   nu <- 1 + phi[length(theta) + 3]
+# 
+#   xP <- try(vode(y = c(get.x.steady(t = max(times),
+#                                     parms = c(theta, gamma)),
+#                        rep(0, 10)), # nStates*(nStates - 1)/2 + nStates = 10
+#                  times = times,
+#                  func = get.dxdP,
+#                  jacfunc = get.Jf.xP,
+#                  mf = -21,
+#                  hmax = hmax, # max(tps),
+#                  parms = c(theta, gamma),
+#                  rtol = 1e-6),
+#             silent = TRUE)[,-1]
+# 
+#   mu <- xP[,"O"]*gs*nu*(V - E)
+#   s <- gs^2*nu*(V - E)^2*xP[,9]*diff(times)[1] + s2
+# 
+#   nl <- as.numeric(sum(log(s)) +  t(y - mu) %*% ((y - mu)/s))
+#   return(nl)
+# }
+# 
+# 
+# get.gnl <- function(psi,
+#                     gamma,
+#                     times,
+#                     V,
+#                     E,
+#                     y,
+#                     hmax){
+# 
+#   phi <- exp(psi)
+# 
+#   theta <- head(phi, -3)
+#   gs <- phi[length(theta) + 1]
+#   s2 <- phi[length(theta) + 2]
+#   nu <- 1 + phi[length(theta) + 3]
+# 
+#   xP.wg <- try(vode(y = c(get.x.steady(t = max(times),
+#                                        parms = c(theta, gamma)),
+#                           rep(0, 10), # nStates*(nStates - 1)/2 + nStates
+#                           get.x.steady_djs(t = max(times),
+#                                            parms = c(theta, gamma)),
+#                           rep(0, 80)),
+#                     times = times,
+#                     func = get.dxdP.wg,
+#                     jacfunc = get.Jf.xP.wg,
+#                     mf = -21,
+#                     hmax = hmax, # max(tps),
+#                     parms = c(theta, gamma),
+#                     rtol = c(rep(1e-6, 4),
+#                              rep(1e-6, 10),
+#                              rep(1e-6, 112))),
+#                silent = TRUE)[,-1]
+# 
+#   mu <- xP.wg[,"O"]*gs*nu*(V - E)
+#   s <- gs^2*nu*(V - E)^2*xP.wg[,9]*diff(times)[1] + s2
+# 
+#   dmu_theta <- xP.wg[, which(1:ncol(xP.wg) %% (ncol(xP.wg)/9) == 2)[-1]]*gs*nu*(V - E)
+#   dmu_gs <- xP.wg[,"O"]*nu*(V - E)
+#   dmu_nu <- xP.wg[,"O"]*gs*(V - E)
+# 
+#   ds_theta <- xP.wg[, which(1:ncol(xP.wg) %% (ncol(xP.wg)/9) == 9)[-1]]*gs^2*nu*(V - E)^2*diff(times)[1]
+#   ds_gs <- 2*gs*nu*(V - E)^2*xP.wg[,9]*diff(times)[1]
+#   ds_s2 <- 1
+#   ds_dnu <- gs^2*(V - E)^2*xP.wg[,9]*diff(times)[1]
+# 
+#   gnl_theta <- as.numeric(colSums(ds_theta/s)
+#                           -as.numeric(2*t(dmu_theta) %*% ((y - mu)/s))
+#                           -as.numeric(t(y - mu) %*% Diagonal(length(s), 1/s^2) %*% (ds_theta*(y - mu))))*theta
+# 
+#   gnl_gs <- as.numeric(sum(ds_gs/s)
+#                        -as.numeric(2*t(dmu_gs) %*% ((y - mu)/s))
+#                        -as.numeric(t(y - mu) %*% Diagonal(length(s), 1/s^2) %*% (ds_gs*(y - mu))))*gs
+# 
+#   gnl_s2 <- as.numeric(sum(1/s) - t(y - mu) %*% ((y - mu)/s^2))*s2
+#   gnl_nu <- as.numeric(sum(ds_dnu/s)
+#                        -as.numeric(2*t(dmu_nu) %*% ((y - mu)/s))
+#                        -as.numeric(t(y - mu) %*% Diagonal(length(s), 1/s^2) %*% (ds_dnu*(y - mu))))*exp(tail(psi,1))
+# 
+#   return(c(gnl_theta,
+#            gnl_gs,
+#            gnl_s2,
+#            gnl_nu))
+# 
+# }
+# get.gnl <- function(psi,
+#                     gamma,
+#                     times,
+#                     V,
+#                     E,
+#                     y,
+#                     hmax){
+#   
+#   phi <- exp(psi)
+#   
+#   theta <- head(phi, -3)
+#   gs <- phi[length(theta) + 1]
+#   s2 <- phi[length(theta) + 2]
+#   nu <- 1 + phi[length(theta) + 3]
+#   
+#   dx_th.idx <- tail(which(1:126 %% (126/9) %in% 1:4), 32)
+#   dP_th.idx <- tail(which(1:126 %% (126/9) %in% c(0,5:14)), 80)  
+#   xP_dxP_0 <- rep(NA, 126)
+#   xP_dxP_0[1:4] <- get.x.steady(t = max(times),
+#                                 parms = c(theta, gamma))
+#   xP_dxP_0[5:14] <- rep(0, 10)
+#   xP_dxP_0[dx_th.idx] <- get.x.steady_djs(t = max(times),
+#                                           parms = c(theta, gamma))
+#   xP_dxP_0[dP_th.idx] <- rep(0, 80)
+#   
+#   xP.wg <- try(vode(y = xP_dxP_0,
+#                     times = times,
+#                     func = get.dxdP.wg,
+#                     jacfunc = get.Jf.xP.wg,
+#                     mf = -21,
+#                     hmax = hmax, # max(tps),
+#                     parms = c(theta, gamma),
+#                     rtol = c(rep(1e-6, 4),
+#                              rep(1e-6, 10),
+#                              rep(1e-6, 112))),
+#                silent = TRUE)[,-1]
+#   
+#   mu <- xP.wg[,"O"]*gs*nu*(V - E)
+#   s <- gs^2*nu*(V - E)^2*xP.wg[,9]*diff(times)[1] + s2
+#   
+#   dmu_theta <- xP.wg[, which(1:ncol(xP.wg) %% (ncol(xP.wg)/9) == 2)[-1]]*gs*nu*(V - E)
+#   dmu_gs <- xP.wg[,"O"]*nu*(V - E)
+#   dmu_nu <- xP.wg[,"O"]*gs*(V - E)
+#   
+#   ds_theta <- xP.wg[, which(1:ncol(xP.wg) %% (ncol(xP.wg)/9) == 9)[-1]]*gs^2*nu*(V - E)^2*diff(times)[1]
+#   ds_gs <- 2*gs*nu*(V - E)^2*xP.wg[,9]*diff(times)[1]
+#   ds_s2 <- 1
+#   ds_dnu <- gs^2*(V - E)^2*xP.wg[,9]*diff(times)[1]
+#   
+#   gnl_theta <- as.numeric(colSums(ds_theta/s)
+#                           -as.numeric(2*t(dmu_theta) %*% ((y - mu)/s))
+#                           -as.numeric(t(y - mu) %*% Diagonal(length(s), 1/s^2) %*% (ds_theta*(y - mu))))*theta
+#   
+#   gnl_gs <- as.numeric(sum(ds_gs/s)
+#                        -as.numeric(2*t(dmu_gs) %*% ((y - mu)/s))
+#                        -as.numeric(t(y - mu) %*% Diagonal(length(s), 1/s^2) %*% (ds_gs*(y - mu))))*gs
+#   
+#   gnl_s2 <- as.numeric(sum(1/s) - t(y - mu) %*% ((y - mu)/s^2))*s2
+#   gnl_nu <- as.numeric(sum(ds_dnu/s)
+#                        -as.numeric(2*t(dmu_nu) %*% ((y - mu)/s))
+#                        -as.numeric(t(y - mu) %*% Diagonal(length(s), 1/s^2) %*% (ds_dnu*(y - mu))))*exp(tail(psi,1))
+#   
+#   return(c(gnl_theta,
+#            gnl_gs,
+#            gnl_s2,
+#            gnl_nu))
+#   
+# }
 
 get.fim <- function(psi,
                     gamma,
@@ -597,23 +817,54 @@ get.fim <- function(psi,
 
 }
 
+# get.pred <- function(psi,
+#                      gamma,
+#                      times,
+#                      V,
+#                      E,
+#                      hmax){
+# 
+#   phi <- exp(psi)
+# 
+#   theta <- head(phi, -3)
+#   gs <- phi[length(theta) + 1]
+#   s2 <- phi[length(theta) + 2]
+#   nu <- 1 + phi[length(theta) + 3]
+# 
+#   xP <- try(vode(y = c(get.x.steady(t = max(times),
+#                                     parms = c(theta, gamma)),
+#                        rep(0, 10)), # nStates*(nStates - 1)/2 + nStates = 10
+#                  times = times,
+#                  func = get.dxdP,
+#                  jacfunc = get.Jf.xP,
+#                  mf = -21,
+#                  hmax = hmax, # max(tps),
+#                  parms = c(theta, gamma),
+#                  rtol = 1e-6),
+#             silent = TRUE)[,-1]
+# 
+#   mu <- xP[,"O"]*gs*nu*(V - E)
+#   s <- gs^2*nu*(V - E)^2*xP[,9]*diff(times)[1] + s2
+# 
+#   return(cbind(mu, s))
+# }
+
 get.pred <- function(psi,
                      gamma,
                      times,
                      V,
                      E,
                      hmax){
-
+  
   phi <- exp(psi)
-
+  
   theta <- head(phi, -3)
   gs <- phi[length(theta) + 1]
   s2 <- phi[length(theta) + 2]
   nu <- 1 + phi[length(theta) + 3]
-
-  xP <- try(vode(y = c(get.x.steady(t = max(times),
-                                    parms = c(theta, gamma)),
-                       rep(0, 10)), # nStates*(nStates - 1)/2 + nStates = 10
+  
+  xP <- try(vode(y = get.xP.steady(t = max(times),
+                                   parms = c(theta, gamma)), # nStates*(nStates - 1)/2 + nStates = 10
                  times = times,
                  func = get.dxdP,
                  jacfunc = get.Jf.xP,
@@ -622,10 +873,10 @@ get.pred <- function(psi,
                  parms = c(theta, gamma),
                  rtol = 1e-6),
             silent = TRUE)[,-1]
-
+  
   mu <- xP[,"O"]*gs*nu*(V - E)
   s <- gs^2*nu*(V - E)^2*xP[,9]*diff(times)[1] + s2
-
+  
   return(cbind(mu, s))
 }
 
@@ -671,9 +922,8 @@ get.x.em <- function(theta,
                        function(t){which(times == t)})
   
   nStates <- length(chs.lst) - 1
-  xP <- vode(y = c(get.x.steady(t = max(times),
-                                parms = theta),
-                   rep(0, nStates*(nStates - 1)/2 + nStates)),
+    xP <- vode(y = c(get.xP.steady(t = max(times),
+                                parms = theta)),
              times = times,
              func = get.dxdP,
              jacfunc = get.Jf.xP,
@@ -681,6 +931,16 @@ get.x.em <- function(theta,
              hmax = 1, # max(tps),
              parms = theta,
              rtol = 1e-6)[,-1]
+  # xP <- vode(y = c(get.x.steady(t = max(times),
+  #                               parms = theta),
+  #                  rep(0, nStates*(nStates - 1)/2 + nStates)),
+  #            times = times,
+  #            func = get.dxdP,
+  #            jacfunc = get.Jf.xP,
+  #            mf = -21,
+  #            hmax = 1, # max(tps),
+  #            parms = theta,
+  #            rtol = 1e-6)[,-1]
   
   for (k in 2:length(times)) {
     cat(paste0("\t t = ", times[k], "\n"))

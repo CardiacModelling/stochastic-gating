@@ -9,7 +9,8 @@ l.pkgs <- c("stringr",
             "mvtnorm",
             "tmvtnorm",
             "parallel",
-            "nloptr")
+            "nloptr",
+            "spsUtil")
 lapply(l.pkgs, function(pkg){
   if(!(pkg %in% rownames(inst.pkgs))){
     install.packages(pkg)
@@ -157,6 +158,10 @@ generate.get.dxdP.wg(n = nStates*(nStates - 1)/2 + 2*nStates,
 
 generate.get.Sigma(ct.lst = chs,
                    rct.lst = rcs)
+
+generate.get.xP.steady(ct.lst = chs)
+generate.get.xP.steady_djs(p = ntheta, 
+                           jsens = JSENS)
 
 ## ODE functions
 cat(paste0("\t generating ODE functions...\n"))
@@ -395,6 +400,10 @@ generate.get.dxdP.wg(n = nStates*(nStates - 1)/2 + 2*nStates,
 generate.get.Sigma(ct.lst = chs,
                    rct.lst = rcs)
 
+generate.get.xP.steady(ct.lst = chs)
+generate.get.xP.steady_djs(p = ntheta, 
+                           jsens = JSENS)
+
 ## ODE functions
 cat(paste0("\t generating ODE functions...\n"))
 
@@ -547,7 +556,7 @@ c(1/6.7)/sum(c(1/6.7,
                1/2.5)) # \pi_1
 exp(psi.true[9])/exp(res.SDE_noF$par[9])
 
-pdf(paste0(allFigsPath, "fig7a.pdf"), width = 4.5, height = 4.5)
+pdf(paste0(allFigsPath, "fig10a.pdf"), width = 4.5, height = 4.5)
 par(mar = c(4,5.5,.5,.5))
 plot(x = psi.true, 
      y = res.SDE_noF$par,
@@ -591,7 +600,7 @@ mu_msd <- (mus[1:length(Vsin) %% 10 == 1, "mu"] - qnorm(1-0.05/2)*sqrt(mus[1:len
 mu_psd_noF <- (mus_noF[1:length(Vsin) %% 10 == 1, "mu"] + qnorm(1-0.05/2)*sqrt(mus[1:length(Vsin) %% 10 == 1, "s"]))
 mu_msd_noF <- (mus_noF[1:length(Vsin) %% 10 == 1, "mu"] - qnorm(1-0.05/2)*sqrt(mus[1:length(Vsin) %% 10 == 1, "s"]))
 
-pdf(paste0(allFigsPath, "fig7b.pdf"), width = 12, height = 4.5)
+pdf(paste0(allFigsPath, "fig10b.pdf"), width = 12, height = 4.5)
 par(mar = c(2,5,.5,.5), mfrow = c(1,1))
 ###
 plot(1, 

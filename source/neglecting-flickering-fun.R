@@ -1,3 +1,4 @@
+
 nl.nus2.try_noF <- function(psi,
                         g,
                         gamma,
@@ -95,19 +96,19 @@ get.gnl.nus2_noF <- function(psi,
 }
 
 nl.try_noF <- function(psi,
-                   gamma,
-                   times,
-                   V,
-                   E,
-                   y,
-                   hmax){
-  nl.res <- try(get.nl_noF(psi = psi,
-                   gamma = gamma,
-                   times = times,
-                   V = V,
-                   E = E,
-                   y = y,
-                   hmax = hmax), silent = TRUE)
+                       gamma,
+                       times,
+                       V,
+                       E,
+                       y,
+                       hmax){
+  nl.res <- try(quiet(get.nl_noF(psi = psi,
+                                 gamma = gamma,
+                                 times = times,
+                                 V = V,
+                                 E = E,
+                                 y = y,
+                                 hmax = hmax)), silent = TRUE)
   if(inherits(nl.res,'try-error') |
      is.nan(nl.res) |
      is.infinite(nl.res)){
@@ -184,19 +185,19 @@ get.pred_noF <- function(psi,
 }
 
 gnl.try_noF <- function(psi,
-                    gamma,
-                    times,
-                    V,
-                    E,
-                    y,
-                    hmax){
-  gnl.res <- try(get.gnl_noF(psi = psi,
-                         gamma = gamma,
-                         times = times,
-                         V = V,
-                         E = E,
-                         y = y,
-                         hmax = hmax), silent = TRUE)
+                        gamma,
+                        times,
+                        V,
+                        E,
+                        y,
+                        hmax){
+  gnl.res <- try(quiet(get.gnl_noF(psi = psi,
+                                   gamma = gamma,
+                                   times = times,
+                                   V = V,
+                                   E = E,
+                                   y = y,
+                                   hmax = hmax)), silent = TRUE)
   if(inherits(gnl.res,'try-error') |
      sum(is.nan(gnl.res)) > 0 |
      sum(is.infinite(gnl.res)) > 0){

@@ -584,13 +584,13 @@ generate.nl_try <- function(p,
                    V,
                    E,
                    hmax){
-  nl.res <- try(nl(psi = psi,\n",
+  nl.res <- try(quiet(nl(psi = psi,\n",
                           ifelse(length(setdiff(1:p, jsens)) > 0, paste0(paste(paste0("p",setdiff(1:p, jsens), " = p", setdiff(1:p, jsens)), collapse = ",\n"), ",\n"), ""),
                           "y = y,
                    times = times,
                    V = V,
                    E = E,
-                   hmax = hmax), silent = TRUE)
+                   hmax = hmax)), silent = TRUE)
   if(inherits(nl.res,'try-error') |
      is.nan(nl.res) |
      is.infinite(nl.res)){
@@ -615,13 +615,13 @@ generate.gnl_try <- function(p,
                    V,
                    E,
                    hmax){
-  gnl.res <- try(gnl(psi = psi,\n",
+  gnl.res <- try(quiet(gnl(psi = psi,\n",
                            ifelse(length(setdiff(1:p, jsens)) > 0, paste0(paste(paste0("p",setdiff(1:p, jsens), " = p", setdiff(1:p, jsens)), collapse = ",\n"), ",\n"), ""),
                            "y = y,
                    times = times,
                    V = V,
                    E = E,
-                   hmax = hmax), silent = TRUE)
+                   hmax = hmax)), silent = TRUE)
   if(inherits(gnl.res,'try-error') |
      sum(is.nan(gnl.res)) > 0 |
      sum(is.infinite(gnl.res)) > 0){

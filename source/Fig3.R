@@ -154,6 +154,10 @@ generate.get.dxdP.wg(n = nStates*(nStates - 1)/2 + 2*nStates,
 generate.get.Sigma(ct.lst = chs,
                    rct.lst = rcs)
 
+generate.get.xP.steady(ct.lst = chs)
+generate.get.xP.steady_djs(p = ntheta, 
+                           jsens = JSENS)
+
 ## ODE functions
 cat(paste0("\t generating ODE functions...\n"))
 
@@ -210,19 +214,19 @@ E.true <- -88.35746
 gamma.true <- tail(th.true, 1)
 
 
-Y0 <- get.X0(theta = th.true,
-                  nu = nu.true,
-                  times = tps,
-                  chs.lst = chs)
+Y0 <- get.x.em(theta = th.true,
+               nu = nu.true,
+               times = tps,
+               chs.lst = chs)
 
 X0 <- get.logistic(Y0)
 
-y0 <- get.y0(times = tps,
-                  X = X0,
-                  gs = g.true/nu.true,
-                  nu = nu.true,
-                  E = E.true,
-                  s2 = s2.true)
+y0 <- get.y.em(times = tps,
+               X = X0,
+               gs = g.true/nu.true,
+               nu = nu.true,
+               E = E.true,
+               s2 = s2.true)
 
 psi.true <- log(c(head(th.true, -1), 
                   g.true/nu.true, 

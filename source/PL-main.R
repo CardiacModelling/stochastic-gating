@@ -8,7 +8,8 @@ l.pkgs <- c("stringr",
             "mvtnorm",
             "tmvtnorm",
             "parallel",
-            "nloptr")
+            "nloptr",
+            "spsUtil")
 lapply(l.pkgs, function(pkg){
   if(!(pkg %in% rownames(inst.pkgs))){
     install.packages(pkg)
@@ -157,6 +158,10 @@ generate.get.dxdP.wg(n = nStates*(nStates - 1)/2 + 2*nStates,
 
 generate.get.Sigma(ct.lst = chs,
                    rct.lst = rcs)
+
+generate.get.xP.steady(ct.lst = chs)
+generate.get.xP.steady_djs(p = ntheta, 
+                           jsens = JSENS)
 
 ## ODE functions
 cat(paste0("\t generating ODE functions...\n"))
@@ -431,4 +436,8 @@ points(res.SDE$par[par.idx],
        pch = "*",
        col = "blue",
        cex = 10)
+par(xpd=FALSE)
+abline(h = (res.SDE$value + qchisq(p = .95, df = 1)/2)/10000,
+       lty = 1, lwd = 7, col = scales::alpha('red',.5))
 dev.off()
+

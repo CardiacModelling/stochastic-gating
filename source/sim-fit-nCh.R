@@ -8,7 +8,8 @@ l.pkgs <- c("stringr",
             "mvtnorm",
             "tmvtnorm",
             "parallel",
-            "nloptr")
+            "nloptr",
+            "spsUtil")
 lapply(l.pkgs, function(pkg){
   if(!(pkg %in% rownames(inst.pkgs))){
     install.packages(pkg)
@@ -159,6 +160,10 @@ generate.get.dxdP.wg(n = nStates*(nStates - 1)/2 + 2*nStates,
 
 generate.get.Sigma(ct.lst = chs,
                    rct.lst = rcs)
+
+generate.get.xP.steady(ct.lst = chs)
+generate.get.xP.steady_djs(p = ntheta, 
+                           jsens = JSENS)
 
 ## ODE functions
 cat(paste0("\t generating ODE functions...\n"))
@@ -420,7 +425,7 @@ h2 <- hist(sapply(res.all, FUN = function(res){
   tail(res$par, 2)[1]
 }), plot = FALSE)
 
-pdf(paste0(allFigsPath, "fig6b",as.character(s2.true),".pdf"), width = 8, height = 4)
+pdf(paste0(allFigsPath, "fig7b",as.character(s2.true),".pdf"), width = 8, height = 4)
 par(mar = c(3,3,1,1), mfrow = c(1,2))
 plot(h1, 
      col = scales::alpha('blue', alpha = .2), 
@@ -449,7 +454,7 @@ abline(v = log(s2.true), lty = 2, lwd = 3)
 dev.off()
 
 
-pdf(paste0(allFigsPath, "fig6a", as.character(s2.true),".pdf"), width = 5, height = 4.5)
+pdf(paste0(allFigsPath, "fig7a", as.character(s2.true),".pdf"), width = 5, height = 4.5)
 par(mar = c(4,5.5,1,1))
 plot(log(nu.trues),
      sapply(res.all, function(res){

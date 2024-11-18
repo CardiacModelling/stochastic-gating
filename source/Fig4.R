@@ -1,18 +1,18 @@
 
-all.s2 <- c(1e-6,1e-5,1e-4)
+all.s2 <- c(0.000001, 0.00001, 0.0001)
 all.nu <- c(100,1000,10000)
 
 for (s2 in all.s2) {
   for (nu in all.nu) {
-    s2_nu.true_nSim_nCores <- paste(s2, nu, 20, 20, sep = "-")
+    s2_nu.true_nSim_nCores <- paste(format(s2, scientific=F), nu, 20, 20, sep = "-")
 
    source("./source/sim-fit.R") 
   }
 }
 
-temp = list.files(path = "./results/UQ1/", pattern="\\.csv$")
+temp = list.files(path = resUQ1, pattern="\\.csv$")
 myfiles = lapply(temp, function(fn){
-  read.csv(file = paste0("./results/UQ1/", fn), header = TRUE)
+  read.csv(file = paste0(resUQ1, fn), header = TRUE)
 })
 
 
@@ -45,19 +45,19 @@ psitrues <- sapply(dimnames(allthetas)[[3]], function(s){
 
 pdf(paste0(allFigsPath, "/fig4c.pdf"), width = 7, height = 6)
 par(mar = c(5,6,2,2))
-plot(c(psitrues[,rep(1:9, each = 20)]), 
+plot(c(psitrues[,rep(1:9, each = ncol(allthetas))]), 
      c(allthetas),
-     pch = rep(c(1,2,3), each = 3*20*11),
-     col = rep(rep(c("blue", "red", "green"), each = 20*11), times = 3),
+     pch = rep(c(1,2,3), each = 3*ncol(allthetas)*11),
+     col = rep(rep(c("blue", "red", "green"), each = ncol(allthetas)*11), times = 3),
      cex = 3,
      lwd = 1,
      cex.axis = 2.5,
      cex.lab = 2.5,
      xlab = expression(log~psi),
      ylab = expression(log~hat(psi)))
-lines(range(c(psitrues[,rep(1:9, each = 20)],
+lines(range(c(psitrues[,rep(1:9, each = ncol(allthetas))],
               allthetas)),
-      range(c(psitrues[,rep(1:9, each = 20)],
+      range(c(psitrues[,rep(1:9, each = ncol(allthetas))],
               allthetas)),
       lwd = 5, col = 'grey')
 legend(x = -6,

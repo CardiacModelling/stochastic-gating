@@ -1,3 +1,4 @@
+
 reversal_potential <- function(temperature){
       # Calculates the reversal potential for Potassium ions, using Nernst's
     # equation for a given ``temperature`` in degrees celsius and the internal

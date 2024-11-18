@@ -20,5 +20,3 @@ n2c.gnl.comp <- function(psi, mu, s2, V, E){
   return(gnl)
 }
 
-
-  

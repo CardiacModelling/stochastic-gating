@@ -1,3 +1,4 @@
+
 FIM_parabola <- function(x, 
                          a, 
                          H,

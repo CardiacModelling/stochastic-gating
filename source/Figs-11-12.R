@@ -12,7 +12,7 @@ thetas <- sapply(1:9, function(nCell){
 
 x <- lapply(1:11, function(j){thetas[j,]})
 
-pdf(paste0(allFigsPath, "fig8b.pdf"), width = 12, height = 4)
+pdf(paste0(allFigsPath, "fig11b.pdf"), width = 12, height = 4)
 par(mar = c(3.2,4,.5,.5))
 plot(0, 
      0, 
@@ -59,3 +59,5 @@ dev.off()
 xtable::xtable(x = rbind(thetas,
                          exp(thetas[9,])*(1 + exp(thetas[11,]))))
 
+write.csv(x = thetas,
+          file = paste0(resData, paste0("table3.csv")))
