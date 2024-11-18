@@ -5,7 +5,7 @@ Figures 3-12 of the paper can be reproduced by running the corresponding .sh fil
 
 R version: 4.2.1-foss-2022a
 
-Packages:
+Packages: <br>
 spsUtil_0.2.2 <br>
 pracma_2.4.2 <br>
 stringr_1.5.0 <br>
