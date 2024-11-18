@@ -3,6 +3,8 @@ Code to replicate the analyses from the article "Parameter inference for stochas
 
 Figures 3-12 of the paper can be reproduced by running the corresponding .sh files fig3.sh, fig4.sh, etc. The figures will be stored in the folder "./results/allFigures/", which will be dynamically generated after running the code.
 
+Code dependencies:
+
 R version: 4.2.1-foss-2022a
 
 Packages: <br>
