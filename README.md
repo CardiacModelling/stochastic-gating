@@ -19,3 +19,11 @@ mvtnorm_1.2-1 <br>
 Matrix_1.5-1 <br>
 deSolve_1.35 <br>
 Deriv_4.1.3
+
+
+Please note: the required packages will be automatically installed when running the code. To allow for this, a CRAN repository must be set first, by including the line
+
+```
+options(repos=c(CRAN="URL_OF_REPOSITORY"))
+```
+to the '.Rprofile', located in the user home directory.
