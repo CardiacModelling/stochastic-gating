@@ -26,4 +26,4 @@ Please note: the required packages will be automatically installed when running 
 ```
 options(repos=c(CRAN="URL_OF_REPOSITORY"))
 ```
-to the '.Rprofile', located in the user home directory.
+to the `.Rprofile`, located in the user home directory.
